@@ -1,31 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize the API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Use POST method" });
+    return res.status(405).json({ error: "Use POST" });
+  }
+
+  // 1. Check if the API key is present in the environment
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "GEMINI_API_KEY is missing in Vercel settings." });
   }
 
   try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // 2. Use the base model name
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
     const { question } = req.body;
 
-    if (!question) {
-      return res.status(400).json({ error: "Missing 'question' in body" });
-    }
-
-    // FIX: Using the fully qualified model name and the correct method
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: question }] }],
-      generationConfig: {
-        maxOutputTokens: 500,
-        temperature: 0.7,
-      },
-    });
-
+    // 3. Simple generation call
+    const result = await model.generateContent(question || "Hello");
     const response = await result.response;
     const text = response.text();
 
@@ -35,10 +30,11 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error("Detailed Gemini Error:", error);
+    console.error("Gemini Error Log:", error);
     return res.status(500).json({ 
-      error: "AI service failed to respond", 
-      details: error.message 
+      error: "Connection failed", 
+      details: error.message,
+      suggestion: "Check if your API key has 'Generative Language API' enabled in Google Cloud Console."
     });
   }
 }
