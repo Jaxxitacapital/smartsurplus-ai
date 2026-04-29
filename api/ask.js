@@ -4,36 +4,44 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Use POST" });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "API Key missing in Vercel" });
+  if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY is missing." });
 
   try {
-    // Force the SDK to use the stable v1 endpoint
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // We use the most basic model string
+    /**
+     * FORCE v1 Stable Endpoint
+     * In 2026, gemini-1.5-flash is often disabled on v1beta.
+     * We use gemini-2.0-flash for better 50/30/20 rule explanations.
+     */
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash", 
     });
 
     const { question } = req.body;
 
-    // Use a more structured request to ensure compatibility
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: question || "Hello" }] }],
+      generationConfig: {
+        temperature: 0.8,
+        topP: 0.95,
+        maxOutputTokens: 1000,
+      }
     });
 
     const response = await result.response;
     
     return res.status(200).json({
       answer: response.text(),
-      status: "SmartSurplus Live 🚀"
+      status: "SmartSurplus AI (v2.0) Live 🚀"
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Gemini Deployment Error:", error);
     return res.status(500).json({ 
-      error: "API Version Mismatch", 
-      details: error.message 
+      error: "Model not found or region restricted", 
+      details: error.message,
+      tip: "If this persists, go to AI Studio and check which models are listed as 'Available' for your region."
     });
   }
 }
