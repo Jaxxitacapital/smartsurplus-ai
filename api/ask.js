@@ -1,50 +1,37 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 1. Initialize OpenAI outside the handler
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize using the API Key from your Vercel Environment Variables
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export default async function handler(req, res) {
-  // 2. Validate Method
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed. Use POST." });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
     const { question } = req.body;
-
-    // 3. Validate Input
+    
     if (!question) {
-      return res.status(400).json({ error: "Missing 'question' in request body." });
+      return res.status(400).json({ error: "No question provided" });
     }
 
-    // 4. AI Completion logic
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You are SmartSurplus AI, a helpful assistant for students. Provide expert advice on budgeting, student loans, saving strategies, and general financial literacy. Keep answers concise and encouraging.",
-        },
-        {
-          role: "user",
-          content: question,
-        },
-      ],
-      temperature: 0.7,
+    // Use Gemini 1.5 Flash for the best speed/free-tier balance
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: "You are SmartSurplus AI, helping students with budgeting and loans."
     });
 
-    // 5. Return the result
+    const result = await model.generateContent(question);
+    const response = await result.response;
+    const text = response.text();
+
     return res.status(200).json({
-      answer: response.choices[0].message.content,
+      answer: text,
+      status: "SmartSurplus AI (Gemini) active 🚀"
     });
 
   } catch (error) {
-    console.error("SmartSurplus Error:", error);
-    return res.status(500).json({
-      error: "An internal error occurred.",
-      details: error.message
-    });
+    console.error(error);
+    return res.status(500).json({ error: "AI service is temporarily unavailable." });
   }
 }
