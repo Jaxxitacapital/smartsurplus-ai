@@ -2,9 +2,6 @@
   "name": "smartsurplus-ai",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "build": "echo 'No build step required'"
-  },
   "dependencies": {
     "@google/generative-ai": "^0.11.0"
   }
