@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "ai": "3.4.0",
-    "@ai-sdk/openai": "0.0.19"
+    "@ai-sdk/openai": "0.0.19",
+    "openai": "4.86.1"
   }
 }
