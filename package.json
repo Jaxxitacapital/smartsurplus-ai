@@ -2,14 +2,9 @@
   "name": "smartsurplus-ai",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
   "dependencies": {
-    "openai": "^4.0.0",
-    "ai": "^3.0.0", 
-    "@ai-sdk/openai": "^0.0.9"
+    "ai": "3.4.0",
+    "@ai-sdk/openai": "0.0.19",
+    "openai": "4.86.1"
   }
 }
